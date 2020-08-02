@@ -1,0 +1,5 @@
+.pylintrc
+.vscode
+data/images
+models
+auth.py
