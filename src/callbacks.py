@@ -17,5 +17,6 @@ class TrainingNotifier(tf.keras.callbacks.Callback):
         self.notifier.send(
             f"Finished training epoch {epoch} with "
             f"training accuracy: {logs['accuracy']} and "
-            f"validation accuracy: {logs['val_accuracy']}"
+            f"validation accuracy: {logs['val_accuracy']}",
+            print_message=False
         )

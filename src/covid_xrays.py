@@ -408,7 +408,9 @@ def main():
     )
 
     notifier.send("Saving model...")
-    model_file_name = "model_transfer.h5" if USE_TRANSFER_MODEL else "model.h5"
+    model_file_name = \
+        "models" + os.sep + "model_transfer.h5" if USE_TRANSFER_MODEL \
+        else "models" + os.sep + "model.h5"
     model.save(model_file_name)
 
 
