@@ -7,12 +7,13 @@ import discord_notify as dn
 import numpy as np
 import tensorflow as tf
 
-from constants import *
 from auth import WEBHOOK_URL
 from callbacks import TrainingNotifier
+from constants import *
+from model_type import ModelType
 
 IMG_CHANNELS = 3
-USE_TRANSFER_MODEL = True
+MODEL_TYPE = ModelType.INCEPTION_V3
 PLOT_LABELS = False
 LOAD_ALL_IMAGES = False
 
@@ -55,11 +56,15 @@ def get_processed_image(image_path):
     channel
     """
     image = cv2.imread(image_path)
-    if USE_TRANSFER_MODEL:
+    if MODEL_TYPE is ModelType.XCEPTION:
         image = tf.keras.applications.xception.preprocess_input(image)
-    else:
+    elif MODEL_TYPE is ModelType.INCEPTION_V3:
+        image = tf.keras.applications.inception_v3.preprocess_input(image)
+    elif MODEL_TYPE is ModelType.CUSTOM:
         image = image.astype(np.float)
         image /= 255
+    else:
+        raise Exception("Invalid MODEL_TYPE provided")
     return image
 
 
@@ -343,7 +348,7 @@ def generate_model():
     return model
 
 
-def generate_model_transfer():
+def generate_model_xception():
     """
     Returns a compiled convolutional neural network using transfer
     learning with Xception
@@ -355,9 +360,28 @@ def generate_model_transfer():
     model = tf.keras.models.Sequential([
         base_model,
         tf.keras.layers.GlobalAveragePooling2D(),
-        # tf.keras.layers.Flatten(),
-        # tf.keras.layers.Dense(256, activation="relu"),
-        # tf.keras.layers.Dropout(0.25),
+        tf.keras.layers.Dense(LABEL_COUNT, activation="softmax")
+    ])
+    model.compile(
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+    return model
+
+
+def generate_model_inception_v3():
+    """
+    Returns a compiled convolutional neural network using transfer
+    learning with Inception v3
+    """
+    base_model = tf.keras.applications.InceptionV3(
+        include_top=False,
+        input_shape=(IMG_SIZE, IMG_SIZE, IMG_CHANNELS)
+    )
+    model = tf.keras.models.Sequential([
+        base_model,
+        tf.keras.layers.GlobalAveragePooling2D(),
         tf.keras.layers.Dense(LABEL_COUNT, activation="softmax")
     ])
     model.compile(
@@ -383,14 +407,21 @@ def main():
         labels_train, labels_validate, labels_test = load_data()
 
     notifier.send("Generating model...")
-    model = generate_model_transfer() if USE_TRANSFER_MODEL else generate_model()
+    if MODEL_TYPE is ModelType.CUSTOM:
+        model = generate_model()
+    elif MODEL_TYPE is ModelType.XCEPTION:
+        model = generate_model_xception()
+    elif MODEL_TYPE is ModelType.INCEPTION_V3:
+        model = generate_model_inception_v3()
+    else:
+        raise Exception("Invalid MODEL_TYPE provided")
 
     notifier.send("Fitting model...")
     model.fit(
         images_train,
         labels_train,
-        batch_size=8,
-        epochs=15,
+        batch_size=16,
+        epochs=5,
         validation_data=(images_validate, labels_validate),
         callbacks=[TrainingNotifier(notifier)]
     )
@@ -399,7 +430,7 @@ def main():
     log_dict = model.evaluate(
         images_test,
         labels_test,
-        batch_size=8,
+        batch_size=16,
         return_dict=True
     )
     notifier.send(
@@ -408,9 +439,15 @@ def main():
     )
 
     notifier.send("Saving model...")
-    model_file_name = \
-        "models" + os.sep + "model_transfer.h5" if USE_TRANSFER_MODEL \
-        else "models" + os.sep + "model.h5"
+    model_file_name = "models" + os.sep
+    if MODEL_TYPE is ModelType.CUSTOM:
+        model_file_name += "model_custom.h5"
+    elif MODEL_TYPE is ModelType.XCEPTION:
+        model_file_name += "model_xception.h5"
+    elif MODEL_TYPE is ModelType.INCEPTION_V3:
+        model_file_name += "model_inception_v3.h5"
+    else:
+        raise Exception("Invalid MODEL_TYPE provided")
     model.save(model_file_name)
 
 
