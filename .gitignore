@@ -3,3 +3,4 @@
 data/images
 models
 auth.py
+__pycache__

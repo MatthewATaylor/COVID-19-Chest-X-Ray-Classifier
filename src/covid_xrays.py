@@ -13,7 +13,7 @@ from constants import *
 from model_type import ModelType
 
 IMG_CHANNELS = 3
-MODEL_TYPE = ModelType.INCEPTION_V3
+MODEL_TYPE = ModelType.XCEPTION
 PLOT_LABELS = False
 LOAD_ALL_IMAGES = False
 

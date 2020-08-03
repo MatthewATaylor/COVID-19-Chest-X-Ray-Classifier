@@ -27,13 +27,13 @@ These images were shuffled and split into training (80%), validation (10%), and 
     * Training with an even split of x-ray images has not yet been tested.
 
 ## Models
-Two CNN models were generated in `covid_xrays.py`:
-* One using a custom series of convolutions and pooling (created with the `generate_model` function)
+Three CNN models were generated in `covid_xrays.py`:
+1. Using a custom series of convolutions and pooling (created with the `generate_model` function)
     * Accuracy (with testing data): about 93%
-* Another using transfer learning with the Xception image classifier (created with the `generate_model_xception` function)
+2. Using transfer learning with the Inception v3 image classifier (created with the `generate_model_inception_v3` function)
+    * Accuracy (with testing data): about 96%
+3. Using transfer learning with the Xception image classifier (created with the `generate_model_xception` function)
     * Accuracy (with testing data): about 97%
-
-Additionally, a thrid model using transfer learning with the Inception v3 image classifier is currently being tested.
 
 ## Additional Notes
 This program uses the [discord_notify](https://github.com/MatthewATaylor/discord_notify) package to log the program's status through a Discord webhook.
